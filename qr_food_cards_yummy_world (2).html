@@ -132,25 +132,8 @@ function speakSlow(text,btn){if(typeof speechSynthesis==='undefined')return;spee
 function qrUrl(text){return"https://quickchart.io/qr?text="+encodeURIComponent(text)+"&size=200&margin=1";}
 
 function buildCards(){
-  var grid=document.getElementById('cardsGrid'),h='',lastCat='';
-  for(var i=0;i<FOODS.length;i++){
-    var f=FOODS[i];
-    if(f.cat!==lastCat){h+='<div class="cat-divider">'+f.cat+'</div>';lastCat=f.cat;}
-    var tc=f.taste?'taste-'+f.taste:'';
-    var cardUrl=BASE_URL+"#card="+encodeURIComponent(f.n);
-    h+='<div class="card-item" onclick="showScanResult(\''+f.n.replace(/'/g,"\\'")+'\')">';
-    h+='<div class="card-badge">'+f.cat+'</div>';
-    h+='<div class="card-emoji">'+f.i+'</div>';
-    h+='<div class="card-word">'+f.n+'</div>';
-    h+='<div class="card-thai">'+f.t+'</div>';
-    h+='<div class="card-qr"><img src="'+qrUrl(cardUrl)+'" alt="QR '+f.n+'" width="100" height="100" loading="lazy"></div>';
-    if(f.taste)h+='<div class="card-taste '+tc+'">'+f.taste+'</div>';
-    h+='<div class="card-hint">&#128247; Scan me!</div>';
-    h+='</div>';
-  }
-  grid.innerHTML=h;
-  document.getElementById('totalCards').textContent=FOODS.length;
-}
+ "https://roongnapaprompan-star.github.io/Food-Card2/qr_food_cards_yummy_world.html";
+var url = baseUrl + "#card=" + encodeURIComponent(FOODS[i].n);
 
 function showScanResult(foodName){
   var f=null,idx=-1;
