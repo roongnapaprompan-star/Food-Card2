@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Code Food Cards — Yummy World</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#1a1a1a}
+.print-view{max-width:800px;margin:0 auto;padding:20px}
+.print-header{text-align:center;padding:20px 0 10px;margin-bottom:20px}
+.print-header h1{font-size:22px;font-weight:600}
+.print-header p{font-size:13px;color:#666;margin-top:4px}
+.print-actions{text-align:center;margin-bottom:20px}
+.print-actions button{padding:10px 24px;border-radius:8px;border:none;background:#378ADD;color:#fff;font-size:14px;cursor:pointer;margin:0 6px}
+.print-actions button:hover{background:#185FA5}
+.print-actions button.secondary{background:#fff;color:#378ADD;border:1.5px solid #378ADD}
+.print-actions button.secondary:hover{background:#E6F1FB}
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card-item{background:#fff;border-radius:12px;border:1.5px solid #e0e0e0;padding:16px 12px;text-align:center;break-inside:avoid;page-break-inside:avoid;position:relative;cursor:pointer;transition:transform 0.15s}
+.card-item:hover{transform:translateY(-2px);border-color:#378ADD}
+.card-item .card-emoji{font-size:36px;margin-bottom:4px}
+.card-item .card-word{font-size:17px;font-weight:600;color:#1a1a1a;margin-bottom:2px}
+.card-item .card-thai{font-size:12px;color:#888;margin-bottom:8px}
+.card-item .card-qr{display:flex;justify-content:center;margin-bottom:6px}
+.card-item .card-qr img{border-radius:4px;width:100px;height:100px}
+.card-item .card-hint{font-size:10px;color:#aaa}
+.card-item .card-taste{font-size:10px;padding:2px 8px;border-radius:99px;display:inline-block;margin-top:4px}
+.taste-sweet{background:#FEF5E7;color:#B7791F}
+.taste-sour{background:#F0FFF4;color:#276749}
+.taste-salty{background:#EBF8FF;color:#2B6CB0}
+.taste-spicy{background:#FFF5F5;color:#C53030}
+.taste-bitter{background:#F0E6FF;color:#553C9A}
+.card-badge{position:absolute;top:8px;right:8px;font-size:9px;padding:2px 6px;border-radius:4px;background:#E6F1FB;color:#185FA5;font-weight:500}
+.scan-view{display:none;max-width:480px;margin:0 auto;padding:16px;min-height:100vh}
+.scan-back{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:#378ADD;cursor:pointer;margin-bottom:16px;padding:6px 0}
+.scan-back:hover{text-decoration:underline}
+.scan-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.08)}
+.scan-img{width:100%;height:220px;background-size:cover;background-position:center;background-color:#f5f5f5}
+.scan-body{padding:20px}
+.scan-word{font-size:28px;font-weight:700;color:#1a1a1a}
+.scan-phonetic{font-size:14px;color:#888;margin-top:2px}
+.scan-thai{font-size:16px;color:#666;margin-top:4px}
+.scan-divider{height:1px;background:#eee;margin:16px 0}
+.scan-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#aaa;margin-bottom:8px;font-weight:600}
+.scan-sentence{font-size:16px;color:#333;line-height:1.6;font-style:italic;padding:12px 16px;background:#f8f9fa;border-radius:8px;border-left:3px solid #378ADD}
+.scan-taste-row{margin-top:12px;display:flex;align-items:center;gap:8px}
+.scan-taste-badge{font-size:13px;padding:4px 12px;border-radius:99px;font-weight:500}
+.scan-audio-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.scan-audio-btn{flex:1;min-width:120px;padding:12px;border-radius:10px;border:1.5px solid #e0e0e0;background:#fff;cursor:pointer;text-align:center;transition:all 0.15s;font-size:13px;color:#333}
+.scan-audio-btn:hover{border-color:#378ADD;background:#E6F1FB}
+.scan-audio-btn.playing{border-color:#378ADD;background:#378ADD;color:#fff}
+.scan-audio-btn .btn-icon{font-size:20px;display:block;margin-bottom:4px}
+.scan-category{display:inline-block;font-size:11px;padding:3px 10px;border-radius:99px;background:#E6F1FB;color:#185FA5;font-weight:500;margin-top:8px}
+.scan-footer{text-align:center;padding:20px;font-size:11px;color:#bbb;margin-top:20px}
+.scan-footer .logo-text{font-weight:600;color:#378ADD}
+.cat-divider{grid-column:1/-1;padding:10px 0 4px;font-size:14px;font-weight:600;color:#378ADD;border-bottom:2px solid #E6F1FB;margin-top:8px}
+.nav-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;flex-wrap:wrap}
+.nav-btn{padding:8px 16px;border-radius:8px;border:1.5px solid #e0e0e0;background:#fff;cursor:pointer;font-size:12px;color:#333}
+.nav-btn:hover{border-color:#378ADD;background:#E6F1FB}
+.nav-btn.primary{background:#378ADD;color:#fff;border-color:#378ADD}
+@media(max-width:600px){.cards-grid{grid-template-columns:repeat(2,1fr);gap:10px}.scan-img{height:180px}}
+@media print{body{background:#fff}.print-actions,.print-header p,.no-print{display:none!important}.print-header{padding:4px 0}.print-header h1{font-size:16px}.cards-grid{gap:8px;grid-template-columns:repeat(3,1fr)}.card-item{border:1px solid #ccc;padding:10px 8px;border-radius:6px;cursor:default}.card-item:hover{transform:none}.card-item .card-emoji{font-size:28px}.card-item .card-word{font-size:14px}.card-item .card-qr img{width:80px;height:80px}.scan-view{display:none!important}.print-view{display:block!important}}
+</style>
+</head>
+<body>
+
+<div class="print-view" id="printView">
+  <div class="print-header">
+    <h1>QR Code Food Cards — Yummy World: Food Adventure</h1>
+    <p>Print & cut these cards. Students scan QR codes with a phone to see real food images, hear native pronunciation & example sentences.</p>
+  </div>
+  <div class="print-actions no-print">
+    <button onclick="window.print()">&#x1f5a8;&#xfe0f; Print cards</button>
+    <button class="secondary" onclick="showScanResult(FOODS[0].n)">&#x1f50d; Preview scan result</button>
+  </div>
+  <div class="cards-grid" id="cardsGrid"></div>
+  <div style="text-align:center;margin-top:20px;font-size:11px;color:#aaa" class="no-print">
+    Total: <span id="totalCards">0</span> cards &bull; 4 categories &bull; Click any card or scan QR to try!
+  </div>
+</div>
+
+<div class="scan-view" id="scanView">
+  <div class="scan-back no-print" onclick="showPrintView()">&#8592; Back to all cards</div>
+  <div class="scan-card" id="scanCard"></div>
+  <div class="nav-row no-print" id="scanNav"></div>
+  <div class="scan-footer">
+    <span class="logo-text">Yummy World: Food Adventure</span><br>
+    QR Code Food Cards — Grade 5 English Vocabulary
+  </div>
+</div>
+
+<script>
+var BASE_URL="https://roongnapaprompan-star.github.io/Food-Card2/qr_food_cards_yummy_world.html";
+var FOODS=[
+{n:"apple",t:"\u0e41\u0e2d\u0e1b\u0e40\u0e1b\u0e34\u0e25",i:"\ud83c\udf4e",s:"I eat an apple every day.",taste:"sweet",cat:"Fruits & Vegetables",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/400px-Red_Apple.jpg",ph:"/\u02c8\u00e6p.l\u0329/"},
+{n:"banana",t:"\u0e01\u0e25\u0e49\u0e27\u0e22",i:"\ud83c\udf4c",s:"Bananas taste sweet.",taste:"sweet",cat:"Fruits & Vegetables",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Banana-Single.jpg/400px-Banana-Single.jpg",ph:"/b\u0259\u02c8n\u00e6n.\u0259/"},
+{n:"mango",t:"\u0e21\u0e30\u0e21\u0e48\u0e27\u0e07",i:"\ud83e\udd6d",s:"I like mangoes very much.",taste:"sweet",cat:"Fruits & Vegetables",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Hapus_Mango.jpg/400px-Hapus_Mango.jpg",ph:"/\u02c8m\u00e6\u014b.\u0261o\u028a/"},
+{n:"orange",t:"\u0e2a\u0e49\u0e21",i:"\ud83c\udf4a",s:"This orange tastes sour.",taste:"sour",cat:"Fruits & Vegetables",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Oranges_-_whole-halved-segment.jpg/400px-Oranges_-_whole-halved-segment.jpg",ph:"/\u02c8\u0252r.\u026and\u0292/"},
+{n:"corn",t:"\u0e02\u0e49\u0e32\u0e27\u0e42\u0e1e\u0e14",i:"\ud83c\udf3d",s:"Corn tastes sweet.",taste:"sweet",cat:"Fruits & Vegetables",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Ab_food_06.jpg/400px-Ab_food_06.jpg",ph:"/k\u0254\u02d0rn/"},
+{n:"carrot",t:"\u0e41\u0e04\u0e23\u0e2d\u0e17",i:"\ud83e\udd55",s:"Carrots are good for your eyes.",taste:"sweet",cat:"Fruits & Vegetables",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Vegetable-Carrot-Bundle-Small.jpg/400px-Vegetable-Carrot-Bundle-Small.jpg",ph:"/\u02c8k\u00e6r.\u0259t/"},
+{n:"fried rice",t:"\u0e02\u0e49\u0e32\u0e27\u0e1c\u0e31\u0e14",i:"\ud83c\udf5a",s:"I'd like fried rice, please.",taste:"salty",cat:"Main Dishes",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Nasi_goreng_in_Hong_Kong-style_Indonesian_restaurant.jpg/400px-Nasi_goreng_in_Hong_Kong-style_Indonesian_restaurant.jpg",ph:"/fra\u026ad ra\u026as/"},
+{n:"noodles",t:"\u0e01\u0e4b\u0e27\u0e22\u0e40\u0e15\u0e35\u0e4b\u0e22\u0e27",i:"\ud83c\udf5c",s:"Noodles taste spicy.",taste:"spicy",cat:"Main Dishes",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Mama_instant_noodle_block.jpg/400px-Mama_instant_noodle_block.jpg",ph:"/\u02c8nu\u02d0.d\u0259lz/"},
+{n:"pizza",t:"\u0e1e\u0e34\u0e0b\u0e0b\u0e48\u0e32",i:"\ud83c\udf55",s:"Pizza is my favorite food.",taste:"salty",cat:"Main Dishes",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Eq_it-na_pizza-margherita_sep2005_sml.jpg/400px-Eq_it-na_pizza-margherita_sep2005_sml.jpg",ph:"/\u02c8pi\u02d0t.s\u0259/"},
+{n:"hamburger",t:"\u0e41\u0e2e\u0e21\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e40\u0e01\u0e2d\u0e23\u0e4c",i:"\ud83c\udf54",s:"This hamburger tastes salty.",taste:"salty",cat:"Main Dishes",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/RedDot_Burger.jpg/400px-RedDot_Burger.jpg",ph:"/\u02c8h\u00e6m.b\u025c\u02d0.\u0261\u0259r/"},
+{n:"grilled chicken",t:"\u0e44\u0e01\u0e48\u0e22\u0e48\u0e32\u0e07",i:"\ud83c\udf57",s:"Grilled chicken is delicious.",taste:"salty",cat:"Main Dishes",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Grilled_Chicken_Legs.jpg/400px-Grilled_Chicken_Legs.jpg",ph:"/\u0261r\u026ald \u02c8t\u0283\u026ak.\u026an/"},
+{n:"sushi",t:"\u0e0b\u0e39\u0e0a\u0e34",i:"\ud83c\udf63",s:"I like sushi very much.",taste:"salty",cat:"Main Dishes",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Sushi_platter.jpg/400px-Sushi_platter.jpg",ph:"/\u02c8su\u02d0.\u0283i/"},
+{n:"sandwich",t:"\u0e41\u0e0b\u0e19\u0e14\u0e4c\u0e27\u0e34\u0e0a",i:"\ud83e\udd6a",s:"I have a sandwich for lunch.",taste:"salty",cat:"Main Dishes",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Good_Food_Display_-_NCI_Visuals_Online.jpg/400px-Good_Food_Display_-_NCI_Visuals_Online.jpg",ph:"/\u02c8s\u00e6nd.w\u026at\u0283/"},
+{n:"milk",t:"\u0e19\u0e21",i:"\ud83e\udd5b",s:"I drink milk every morning.",taste:"sweet",cat:"Drinks & Desserts",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Milk_glass.jpg/400px-Milk_glass.jpg",ph:"/m\u026alk/"},
+{n:"juice",t:"\u0e19\u0e49\u0e33\u0e1c\u0e25\u0e44\u0e21\u0e49",i:"\ud83e\uddc3",s:"Orange juice tastes sweet.",taste:"sweet",cat:"Drinks & Desserts",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Orangejuice.jpg/376px-Orangejuice.jpg",ph:"/d\u0292u\u02d0s/"},
+{n:"water",t:"\u0e19\u0e49\u0e33",i:"\ud83d\udca7",s:"Can I have some water, please?",taste:"",cat:"Drinks & Desserts",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Glass-of-water.jpg/340px-Glass-of-water.jpg",ph:"/\u02c8w\u0254\u02d0.t\u0259r/"},
+{n:"tea",t:"\u0e0a\u0e32",i:"\ud83c\udf75",s:"Thai tea tastes sweet.",taste:"sweet",cat:"Drinks & Desserts",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Thai_tea.jpg/400px-Thai_tea.jpg",ph:"/ti\u02d0/"},
+{n:"ice cream",t:"\u0e44\u0e2d\u0e28\u0e01\u0e23\u0e35\u0e21",i:"\ud83c\udf66",s:"I love chocolate ice cream.",taste:"sweet",cat:"Drinks & Desserts",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Ice_cream_cone.jpg/220px-Ice_cream_cone.jpg",ph:"/\u02c8a\u026as kri\u02d0m/"},
+{n:"cake",t:"\u0e40\u0e04\u0e49\u0e01",i:"\ud83c\udf70",s:"This cake tastes very sweet.",taste:"sweet",cat:"Drinks & Desserts",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/GermanChocolateCake.jpg/400px-GermanChocolateCake.jpg",ph:"/ke\u026ak/"},
+{n:"chocolate",t:"\u0e0a\u0e47\u0e2d\u0e01\u0e42\u0e01\u0e41\u0e25\u0e15",i:"\ud83c\udf6b",s:"Chocolate tastes sweet.",taste:"sweet",cat:"Drinks & Desserts",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Chocolate_%28blue_background%29.jpg/400px-Chocolate_%28blue_background%29.jpg",ph:"/\u02c8t\u0283\u0252k.l\u0259t/"},
+{n:"chips",t:"\u0e21\u0e31\u0e19\u0e1d\u0e23\u0e31\u0e48\u0e07\u0e17\u0e2d\u0e14",i:"\ud83e\udd54",s:"Chips taste salty and crunchy.",taste:"salty",cat:"Snacks",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Potato-Chips.jpg/400px-Potato-Chips.jpg",ph:"/t\u0283\u026aps/"},
+{n:"bread",t:"\u0e02\u0e19\u0e21\u0e1b\u0e31\u0e07",i:"\ud83c\udf5e",s:"I eat bread for breakfast.",taste:"sweet",cat:"Snacks",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Fresh_made_bread_05.jpg/400px-Fresh_made_bread_05.jpg",ph:"/bred/"},
+{n:"egg",t:"\u0e44\u0e02\u0e48",i:"\ud83e\udd5a",s:"Fried eggs taste salty.",taste:"salty",cat:"Snacks",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Fried_egg%2C_sunny_side_up.jpg/400px-Fried_egg%2C_sunny_side_up.jpg",ph:"/e\u0261/"},
+{n:"rice",t:"\u0e02\u0e49\u0e32\u0e27",i:"\ud83c\udf5a",s:"Thai people eat rice every day.",taste:"",cat:"Snacks",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Rousong_on_rice.jpg/400px-Rousong_on_rice.jpg",ph:"/ra\u026as/"},
+{n:"salad",t:"\u0e2a\u0e25\u0e31\u0e14",i:"\ud83e\udd57",s:"This salad tastes fresh.",taste:"sour",cat:"Snacks",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Salad_garden.jpg/400px-Salad_garden.jpg",ph:"/\u02c8s\u00e6l.\u0259d/"},
+{n:"soup",t:"\u0e0b\u0e38\u0e1b",i:"\ud83e\udd63",s:"Soup tastes salty and spicy.",taste:"salty",cat:"Snacks",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Tomatensuppe.jpg/400px-Tomatensuppe.jpg",ph:"/su\u02d0p/"},
+{n:"popcorn",t:"\u0e1b\u0e4a\u0e2d\u0e1b\u0e04\u0e2d\u0e23\u0e4c\u0e19",i:"\ud83c\udf7f",s:"I eat popcorn at the cinema.",taste:"salty",cat:"Snacks",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Popcorn_up_close_salridge.JPG/400px-Popcorn_up_close_salridge.JPG",ph:"/\u02c8p\u0252p.k\u0254\u02d0rn/"},
+{n:"candy",t:"\u0e25\u0e39\u0e01\u0e2d\u0e21",i:"\ud83c\udf6c",s:"Candy tastes very sweet.",taste:"sweet",cat:"Snacks",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Bonbons_Fruchtbonbons.jpg/400px-Bonbons_Fruchtbonbons.jpg",ph:"/\u02c8k\u00e6n.di/"}
+];
+
+var speechVoice=null;
+function initVoices(){var v=speechSynthesis.getVoices();var p=['Google US English','Samantha','Karen','Daniel','en-US','en-GB'];for(var a=0;a<p.length;a++)for(var b=0;b<v.length;b++){if(v[b].name.indexOf(p[a])!==-1||v[b].lang.indexOf(p[a])!==-1){speechVoice=v[b];return;}}for(var b=0;b<v.length;b++)if(v[b].lang.indexOf('en')===0){speechVoice=v[b];return;}}
+if(typeof speechSynthesis!=='undefined'){speechSynthesis.onvoiceschanged=initVoices;initVoices();}
+function speak(text,btn){if(typeof speechSynthesis==='undefined')return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.rate=0.8;u.pitch=1.0;u.lang='en-US';if(speechVoice)u.voice=speechVoice;if(btn){btn.classList.add('playing');u.onend=function(){btn.classList.remove('playing')};u.onerror=function(){btn.classList.remove('playing')};}speechSynthesis.speak(u);}
+function speakSlow(text,btn){if(typeof speechSynthesis==='undefined')return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.rate=0.5;u.pitch=1.0;u.lang='en-US';if(speechVoice)u.voice=speechVoice;if(btn){btn.classList.add('playing');u.onend=function(){btn.classList.remove('playing')};u.onerror=function(){btn.classList.remove('playing')};}speechSynthesis.speak(u);}
+
+function qrUrl(text){return"https://quickchart.io/qr?text="+encodeURIComponent(text)+"&size=200&margin=1";}
+
+function buildCards(){
+  var grid=document.getElementById('cardsGrid'),h='',lastCat='';
+  for(var i=0;i<FOODS.length;i++){
+    var f=FOODS[i];
+    if(f.cat!==lastCat){h+='<div class="cat-divider">'+f.cat+'</div>';lastCat=f.cat;}
+    var tc=f.taste?'taste-'+f.taste:'';
+    var cardUrl=BASE_URL+"#card="+encodeURIComponent(f.n);
+    h+='<div class="card-item" onclick="showScanResult(\''+f.n.replace(/'/g,"\\'")+'\')">';
+    h+='<div class="card-badge">'+f.cat+'</div>';
+    h+='<div class="card-emoji">'+f.i+'</div>';
+    h+='<div class="card-word">'+f.n+'</div>';
+    h+='<div class="card-thai">'+f.t+'</div>';
+    h+='<div class="card-qr"><img src="'+qrUrl(cardUrl)+'" alt="QR '+f.n+'" width="100" height="100" loading="lazy"></div>';
+    if(f.taste)h+='<div class="card-taste '+tc+'">'+f.taste+'</div>';
+    h+='<div class="card-hint">&#128247; Scan me!</div>';
+    h+='</div>';
+  }
+  grid.innerHTML=h;
+  document.getElementById('totalCards').textContent=FOODS.length;
+}
+
+function showScanResult(foodName){
+  var f=null,idx=-1;
+  for(var i=0;i<FOODS.length;i++){if(FOODS[i].n===foodName){f=FOODS[i];idx=i;break;}}
+  if(!f)return;
+  document.getElementById('printView').style.display='none';
+  document.getElementById('scanView').style.display='block';
+  window.location.hash='card='+encodeURIComponent(foodName);
+  var tc=f.taste?'taste-'+f.taste:'';
+  var tasteHtml=f.taste?'<div class="scan-taste-row"><span class="scan-taste-badge '+tc+'">'+f.taste+'</span></div>':'';
+  var h='<div class="scan-img" style="background-image:url(\''+f.img+'\')"></div>';
+  h+='<div class="scan-body">';
+  h+='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:36px">'+f.i+'</span><div><div class="scan-word">'+f.n+'</div><div class="scan-phonetic">'+f.ph+'</div></div></div>';
+  h+='<div class="scan-thai">'+f.t+'</div>';
+  h+='<span class="scan-category">'+f.cat+'</span>';
+  h+=tasteHtml;
+  h+='<div class="scan-divider"></div>';
+  h+='<div class="scan-section-title">Example sentence</div>';
+  h+='<div class="scan-sentence">"'+f.s+'"</div>';
+  h+='<div class="scan-audio-row">';
+  h+='<button class="scan-audio-btn" id="btn-word" onclick="speak(\''+f.n.replace(/'/g,"\\'")+'\',this)"><span class="btn-icon">&#x1f50a;</span>Hear word</button>';
+  h+='<button class="scan-audio-btn" id="btn-sent" onclick="speak(\''+f.s.replace(/'/g,"\\'")+'\',this)"><span class="btn-icon">&#x1f5e3;&#xfe0f;</span>Hear sentence</button>';
+  h+='</div><div class="scan-audio-row" style="margin-top:8px">';
+  h+='<button class="scan-audio-btn" onclick="speakSlow(\''+f.n.replace(/'/g,"\\'")+'\',this)"><span class="btn-icon">&#x1f422;</span>Slow pronunciation</button>';
+  h+='</div></div>';
+  document.getElementById('scanCard').innerHTML=h;
+  var nav='';
+  if(idx>0)nav+='<button class="nav-btn" onclick="showScanResult(\''+FOODS[idx-1].n.replace(/'/g,"\\'")+'\')">&#8592; '+FOODS[idx-1].n+'</button>';
+  nav+='<span style="font-size:12px;color:#aaa">'+(idx+1)+'/'+FOODS.length+'</span>';
+  if(idx<FOODS.length-1)nav+='<button class="nav-btn primary" onclick="showScanResult(\''+FOODS[idx+1].n.replace(/'/g,"\\'")+'\')">'+FOODS[idx+1].n+' &#8594;</button>';
+  document.getElementById('scanNav').innerHTML=nav;
+  setTimeout(function(){speak(f.n,document.getElementById('btn-word'));},500);
+  window.scrollTo(0,0);
+}
+
+function showPrintView(){document.getElementById('printView').style.display='block';document.getElementById('scanView').style.display='none';history.replaceState(null,null,window.location.pathname);window.scrollTo(0,0);}
+
+function handleHash(){var h=window.location.hash;if(h.indexOf('#card=')===0){showScanResult(decodeURIComponent(h.substring(6)));}}
+window.addEventListener('hashchange',handleHash);
+
+buildCards();
+handleHash();
+</script>
+</body>
+</html>
